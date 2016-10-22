@@ -1,3 +1,11 @@
+This project is a fork of https://github.com/adv0r/wallahack
+
+Created because PR was not answered (https://github.com/adv0r/wallahack/pull/1)
+
+This fork adds:
+* Cmd params support
+* Several NPE fixes
+
 # wallahack
 Wallapop scraper and notifier
 
