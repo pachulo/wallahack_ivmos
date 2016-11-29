@@ -24,28 +24,43 @@ import org.slf4j.LoggerFactory;
  */
 public class MainLauncher {
 
-	private static final boolean DEBUG = true;
+	private static final boolean DEBUG = false;
 
-	@Option(name="-lat", usage="Latitude e.g: 41.398077; See http://mondeca.com/index.php/en/any-place-en")
+	@Option(name="-lat", usage="Latitude e.g. 41.398077")
 	private String latitude = "41.398077";
 
-	@Option(name="-long", usage="Longitude e.g: 2.170432; See http://mondeca.com/index.php/en/any-place-en")
+	@Option(name="-long", usage="Longitude e.g. 2.170432")
 	private String longitude = "2.170432";
 
-	@Option(name="-cat", usage="Category e.g: 12345")
+	@Option(name="-cat", usage="Category e.g.\n" +
+            "\t12345 (Electronic)\n" +
+            "\t12463 (Books, Films & Music)\n" +
+            "\t13100 (Electrical Applicances)")
 	private String category = CAT_ELECTRONIC;
 
-	@Option(name="-keyword", usage="Keyword e.g: casita")
-	private String keyword = "casita";
+	@Option(name="-keyword", usage="Keyword e.g. tele")
+	private String keyword = "tele";
 
-	@Option(name="-min", usage="Min price e.g 0")
+	@Option(name="-min", usage="Min price e.g. 0")
 	private Integer minPrice = 0;
 
-	@Option(name="-max", usage="Max price e.g 50")
+	@Option(name="-max", usage="Max price e.g. 50")
 	private Integer maxPrice = 50;
 
-	@Option(name="-limit", usage="Limit e.g 10")
-	private int limit = 10;
+	@Option(name="-limit", usage="Limit items to show e.g. 20")
+	private Integer limit = 20;
+
+    @Option(name="-dist", usage="Distance in meters from location:\n" +
+            "\t1000 (near)\n" +
+            "\t5000 (zone)\n" +
+            "\t10000 (city)\n" +
+            "\t0 (no distance)")
+    private Integer distance = DIST_CITY;
+
+    @Option(name="-sort", usage="Criteria to sort the results e.g.\n" +"" +
+            "\tcreationDate-des\n" +
+            "\tsalePrice-asc")
+    private String sort = SORT_DATE_DES;
 
 	@Argument
 	private List<String> arguments = new ArrayList<String>();
@@ -60,7 +75,8 @@ public class MainLauncher {
     public static final String LAT_BCN = "41.398077";
     public static final String LONG_BCN = "2.170432";
     public static final String CAT_ELECTRONIC = "12545";
-    public static final String SORT_DATE_DES =  "creationDate-des";
+    public static final String SORT_DATE_DES = "creationDate-des";
+    public static final Integer DIST_CITY = 10000;
 
     public static final String PRODUCT_BASE = "http://es.wallapop.com";
 
@@ -74,9 +90,10 @@ public class MainLauncher {
     }
 
     public void doMain(String[] args) throws IOException {
+
         parseArgs(args);
 
-        URL url = createUrl(keyword, minPrice, maxPrice, category);
+        URL url = createUrl(keyword, minPrice, maxPrice, category, distance, sort, latitude, longitude);
 
         Document doc = null;
         try {
@@ -96,14 +113,17 @@ public class MainLauncher {
 
 
         ArrayList<Product> productList = new ArrayList<Product>();
-        for (int i=1; i< cards.size();i++) {
+        // Don't process more results than the limit
+        for (int i=1; i < cards.size() && i < limit; i++) {
             Product p = parseProduct(cards.get(i));
-            productList.add(p);
-            LOG.trace(p.toString());
+            // If it's null it's because the product is reserved or sold
+            if (p != null) {
+                productList.add(p);
+                LOG.trace(p.toString());
+            }
         }
 
-
-        int maxItems = 10 ;
+        int maxItems = limit ;
         LOG.info("Filtering latest "+maxItems+" items out of "+productList.size()+" retrieved:");
 
         printElems(productList, maxItems);
@@ -116,7 +136,7 @@ public class MainLauncher {
         try {
             parser.parseArgument(args);
 
-            if (arguments.isEmpty()) {
+            if (args.length == 0) {
                 throw new CmdLineException(parser, "No argument is given");
             }
 
@@ -136,7 +156,6 @@ public class MainLauncher {
             if (!DEBUG) {
                 System.exit(-1);
             }
-            return;
         }
     }
 
@@ -153,7 +172,10 @@ public class MainLauncher {
     {
         Product toRet = null;
         //Get price
-        String priceString = getTextFromElement(card, "product-info-price").replace("€", "");
+        String priceString = getTextFromElement(card, "product-info-price")
+                .replace("€", "")
+                .replace("$", "")
+                .replace("£", "");
         double price = Double.parseDouble(priceString);
 
         String title = getTextFromElement(card, "product-info-title");
@@ -172,7 +194,11 @@ public class MainLauncher {
         Element sellerHref =(card.getElementsByAttribute("href").get(3));
         String sellerURL = PRODUCT_BASE+sellerHref.attr("href");
 
-        toRet = new Product(title,description,linkHref,price,category,location,imgURL,sellerURL);
+        // Don't show reserved or sold items
+        // TODO: Check if promoted items also have an icon
+        if (card.getElementsByClass("status-icon").size() == 0) {
+            toRet = new Product(title, description, linkHref, price, category, location, imgURL, sellerURL);
+        }
 
         return toRet;
     }
@@ -203,7 +229,8 @@ public class MainLauncher {
     }
 
 
-    public static URL createUrl(String keyword, int minPrice, int maxPrice,String category){
+    public static URL createUrl(String keyword, int minPrice, int maxPrice, String category, int distance,
+                                String sort, String latitude, String longitude){
         String minPriceStr ="";
         String maxPriceStr ="";
         keyword = keyword.replaceAll(" ","%20");
@@ -214,15 +241,20 @@ public class MainLauncher {
 
         String urlString = BASE; //http://es.wallapop.com/search?
         urlString+="kws="+keyword+"&";
-        urlString+="lat="+LAT_BCN+"&";
-        urlString+="lng="+LONG_BCN+"&";
+        urlString+="lat="+latitude+"&";
+        urlString+="lng="+longitude+"&";
         if(category!="") {
             urlString += "catIds=" + category + "&";
         }
         urlString+="minPrice="+minPriceStr+"&";
         urlString+="maxPrice="+maxPriceStr+"&";
-        urlString+="dist=0_&";
-        urlString+="order="+SORT_DATE_DES;
+        if (distance != 0) {
+            urlString+="dist=0_"+distance+"&";
+        }
+        else{
+            urlString+="dist=0_&";
+        }
+        urlString+="order="+sort;
         URL toRet = null;
         try {
             toRet = new URL(urlString);
