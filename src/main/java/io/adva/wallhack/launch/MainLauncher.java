@@ -71,14 +71,14 @@ public class MainLauncher {
 
     final static Logger LOG = LoggerFactory.getLogger(MainLauncher.class);
 
-    public static final String BASE = "http://es.wallapop.com/search?";
+    public static final String BASE = "https://es.wallapop.com/search?";
     public static final String LAT_BCN = "41.398077";
     public static final String LONG_BCN = "2.170432";
     public static final String CAT_ELECTRONIC = "12545";
     public static final String SORT_DATE_DES = "creationDate-des";
     public static final Integer DIST_CITY = 10000;
 
-    public static final String PRODUCT_BASE = "http://es.wallapop.com";
+    public static final String PRODUCT_BASE = "https://es.wallapop.com";
 
    public static void main (String[] args)
     {
@@ -105,7 +105,7 @@ public class MainLauncher {
         Elements containers = doc.getElementsByClass("container");
         Element container = containers.first();
 
-        Elements cards = container.getElementsByClass("card");
+        Elements cards = container.getElementsByClass("card-product");
         LOG.info("Scraping " + cards.size() + " products matching criteria : " +
                 "category = " + category + ";" +
                 minPrice + "<price<" + maxPrice + "; ");
@@ -114,7 +114,7 @@ public class MainLauncher {
 
         ArrayList<Product> productList = new ArrayList<Product>();
         // Don't process more results than the limit
-        for (int i=1; i <= cards.size() && i <= limit; i++) {
+        for (int i=0; i < cards.size() && i < limit; i++) {
             Product p = parseProduct(cards.get(i));
             // If it's null it's because the product is reserved or sold
             if (p != null) {
@@ -240,7 +240,7 @@ public class MainLauncher {
         if(maxPrice!=0)
             maxPriceStr=""+maxPrice;
 
-        String urlString = BASE; //http://es.wallapop.com/search?
+        String urlString = BASE; //https://es.wallapop.com/search?
         urlString+="kws="+keyword+"&";
         urlString+="lat="+latitude+"&";
         urlString+="lng="+longitude+"&";
