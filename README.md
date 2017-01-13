@@ -4,7 +4,10 @@ This project is a fork of https://github.com/ivmos/wallahack_ivmos
 Wallapop scraper and notifier
 
 Usage example:
+
+```
 java -jar ./build/libs/wallhack-1.0.jar -keyword "marco fotos" -limit 5 -max 500 -lat 40.41877 -long -3.69622
+```
 
 Options:
 
@@ -30,4 +33,7 @@ Options:
 ```
 
 Compile:
+
+```
 ./gradlew clean build
+```
