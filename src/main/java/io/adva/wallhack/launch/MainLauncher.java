@@ -114,7 +114,7 @@ public class MainLauncher {
 
         ArrayList<Product> productList = new ArrayList<Product>();
         // Don't process more results than the limit
-        for (int i=1; i < cards.size() && i < limit; i++) {
+        for (int i=1; i <= cards.size() && i <= limit; i++) {
             Product p = parseProduct(cards.get(i));
             // If it's null it's because the product is reserved or sold
             if (p != null) {
