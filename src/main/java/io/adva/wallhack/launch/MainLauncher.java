@@ -44,8 +44,8 @@ public class MainLauncher {
 	@Option(name="-min", usage="Min price e.g. 0")
 	private Integer minPrice = 0;
 
-	@Option(name="-max", usage="Max price e.g. 50")
-	private Integer maxPrice = 50;
+	@Option(name="-max", usage="Max price e.g. 5000")
+	private Integer maxPrice = 5000;
 
 	@Option(name="-limit", usage="Limit items to show e.g. 20")
 	private Integer limit = 20;
@@ -124,7 +124,8 @@ public class MainLauncher {
         }
 
         int maxItems = limit ;
-        LOG.info("Filtering latest "+maxItems+" items out of "+productList.size()+" retrieved:");
+        LOG.info("Filtering latest " + maxItems + " items out of " +
+                productList.size() + " retrieved (minus items reserved or sold):");
 
         printElems(productList, maxItems);
     }
