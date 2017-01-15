@@ -60,7 +60,7 @@ public class MainLauncher {
     @Option(name="-sort", usage="Criteria to sort the results e.g.\n" +"" +
             "\tcreationDate-des\n" +
             "\tsalePrice-asc")
-    private String sort = SORT_DATE_DES;
+    private String sort = SORT_CREATION_DATE_DES;
 
 	@Argument
 	private List<String> arguments = new ArrayList<String>();
@@ -75,7 +75,7 @@ public class MainLauncher {
     public static final String LAT_BCN = "41.398077";
     public static final String LONG_BCN = "2.170432";
     public static final String CAT_ELECTRONIC = "12545";
-    public static final String SORT_DATE_DES = "creationDate-des";
+    public static final String SORT_CREATION_DATE_DES = "creationDate-des";
     public static final Integer DIST_CITY = 10000;
 
     public static final String PRODUCT_BASE = "https://es.wallapop.com";
